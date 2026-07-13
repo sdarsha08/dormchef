@@ -1,4 +1,352 @@
 <!DOCTYPE html>
-<html>
-    
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DormChef Application</title>
+    <style>
+        /* CSS RESET & BASE STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* FIXED $800x600 APPLICATION CANVAS BOX */
+        #app-canvas {
+            width: 800px;
+            height: 600px;
+            background: #f5f5f7 url('images/fresh-colourful-ingredients-mexican.jpg') center/cover no-repeat;
+            /* Fallback: if the background image doesn't load, it defaults to a clean light grey tint */
+            border: 4px solid #333;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* CORE SCREEN LAYOUT STRUCTURE */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            /* Fades in smoothly mirroring Classic Tween behaviors */
+            animation: fadeIn 0.4s ease-in-out forwards; 
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* HEADINGS & TEXT */
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #000;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        /* BUTTON DESIGN SYSTEM */
+        .btn {
+            background-color: #000;
+            color: #fff;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: background-color 0.2s, transform 0.1s;
+            margin: 10px 0;
+            min-width: 280px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #222;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* OPTIONS SCREEN LAYER OVERLAY */
+        #options-screen {
+            background: rgba(0, 0, 0, 0.65); /* Dark tint to improve readability */
+        }
+
+        /* RECIPE PAGE LAYOUT DESIGN */
+        .recipe-container {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .recipe-left {
+            width: 50%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-y: auto;
+        }
+
+        .recipe-right {
+            width: 50%;
+            height: 100%;
+            position: relative;
+            background-color: #222; /* Placeholder gray color if photo is missing */
+        }
+
+        .recipe-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Placeholder layout text style for broken images */
+        .recipe-img:not([src]), .recipe-img[src=""] {
+            visibility: hidden;
+        }
+        .recipe-right::before {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .recipe-title {
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .recipe-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #ddd;
+            margin-bottom: 10px;
+            white-space: pre-line;
+        }
+
+        /* SYSTEM NAVIGATION BACK ARROW BUTTON */
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            align-self: flex-start;
+            margin-top: 20px;
+            padding: 5px;
+        }
+
+        .back-arrow-svg {
+            fill: #fff;
+            width: 35px;
+            height: 35px;
+            transition: transform 0.2s;
+        }
+
+        .back-btn:hover .back-arrow-svg {
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-canvas">
+
+        <div id="welcome-screen" class="screen active">
+            <h1>Dormchef</h1>
+            <button class="btn" onclick="navigateTo('options-screen')">Enter</button>
+        </div>
+
+        <div id="options-screen" class="screen">
+            <h2>Pick Your Meal</h2>
+            <button class="btn" onclick="navigateTo('recipe-mac-cheese')">Mac & Cheese</button>
+            <button class="btn" onclick="navigateTo('recipe-stir-fry')">Vegetable Stir-Fry</button>
+            <button class="btn" onclick="navigateTo('recipe-pizza')">Tortilla Pizza</button>
+        </div>
+
+        <div id="recipe-mac-cheese" class="screen">
+            <div class="recipe-container">
+                <div class="recipe-left">
+                    <div>
+                        <div class="recipe-title">Mac &<br>Cheese</div>
+                        <div class="section-title">Ingredients:</div>
+                        <div class="recipe-text">- 1/2 cup elbow macaroni
+- 1/2 cup water
+- 1/4 cup milk
+- 1/2 cup shredded cheddar cheese
+- Salt and pepper to taste</div>
+                        
+                        <div class="section-title">Instructions:</div>
+                        <div class="recipe-text">1. In a microwave-safe bowl, combine the macaroni and water.
+2. Microwave on high for 2 minutes, stir, and then microwave in 1-minute intervals, stirring each time, until the pasta is cooked (about 5-6 minutes total). Add more water if needed.
+3. Stir in the milk and cheese, then microwave for an additional 1-2 minutes until the cheese is melted and creamy.
+4. Season with salt and pepper and enjoy.</div>
+                    </div>
+                    
+                    <button class="back-btn" onclick="navigateTo('options-screen')" aria-label="Go Back">
+                        <svg class="back-arrow-svg" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                </div>
+                <div class="recipe-right">
+                    <img class="recipe-img" src="images/Butternut-Squash-Mac-and-Cheese.png" alt="Mac and Cheese">
+                </div>
+            </div>
+        </div>
+
+        <div id="recipe-stir-fry" class="screen">
+            <div class="recipe-container">
+                <div class="recipe-left">
+                    <div>
+                        <div class="recipe-title">Vege<br>Stir Fry</div>
+                        <div class="section-title">Ingredients:</div>
+                        <div class="recipe-text">- 1 1 cup mixed frozen vegetables
+- 1 cup cooked rice (microwavable rice packs work great)
+- 1 tablespoon soy sauce
+- 1 teaspoon sesame oil or olive oil
+- Salt and pepper to taste
+- Optional: cooked chicken, tofu, or scrambled egg for added protein</div>
+                        
+                        <div class="section-title">Instructions:</div>
+                        <div class="recipe-text">1. Place the frozen vegetables in a microwave-safe bowl and microwave for 2-3 minutes until heated through.
+2. Add the cooked rice to the bowl and mix with the vegetables.
+3. Stir in the soy sauce and sesame oil, then microwave for another 1-2 minutes until everything is heated through.
+4. Season with salt and pepper and add any optional protein if desired.</div>
+                    </div>
+                    
+                    <button class="back-btn" onclick="navigateTo('options-screen')" aria-label="Go Back">
+                        <svg class="back-arrow-svg" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                </div>
+                <div class="recipe-right">
+                    <img class="recipe-img" src="images/Easy-Vegetable-Stir-Fry-V1.png" alt="Vegetable Stir Fry">
+                </div>
+            </div>
+        </div>
+
+        <div id="recipe-pizza" class="screen">
+            <div class="recipe-container">
+                <div class="recipe-left">
+                    <div>
+                        <div class="recipe-title">Tortilla<br>Pizza</div>
+                        <div class="section-title">Ingredients:</div>
+                        <div class="recipe-text">- 1 whole wheat tortilla
+- 2 tablespoons marinara sauce or pizza sauce
+- 1/2 cup shredded mozzarella cheese
+- Toppings of choice (pepperoni, sliced bell peppers, mushrooms, etc.)</div>
+                        
+                        <div class="section-title">Instructions:</div>
+                        <div class="recipe-text">1. Place the tortilla on a microwave-safe plate.
+2. Spread the marinara sauce evenly over the tortilla.
+3. Sprinkle the shredded cheese over the sauce and add your favorite toppings.
+4. Microwave on high for 1-2 minutes, or until the cheese is melted and bubbly.
+5. Cut into slices and enjoy.</div>
+                    </div>
+                    
+                    <button class="back-btn" onclick="navigateTo('options-screen')" aria-label="Go Back">
+                        <svg class="back-arrow-svg" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                    </button>
+                </div>
+                <div class="recipe-right">
+                    <img class="recipe-img" src="images/Tortilla-Pizza-002.png" alt="Tortilla Pizza">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Pre-instantiating the audio element object
+        const clickAudio = new Audio('audio/click-button-app-147358.mp3');
+
+        /**
+         * Orchestrates screen navigation state transitions
+         * @param {string} targetScreenId - The ID selector element to bring into frame view
+         */
+        function navigateTo(targetScreenId) {
+            // 1. Play interaction audio safely
+            try {
+                // Rewinds file playhead to start (in case buttons are clicked rapidly)
+                clickAudio.currentTime = 0; 
+                
+                clickAudio.play().catch(error => {
+                    // Suppresses standard browser security blocks regarding auto-playing audio components
+                    console.log("Audio contextual block handled safely: User must interact first.");
+                });
+            } catch (soundError) {
+                // Safeguard: Logs warning if folder audio resources are missing completely
+                console.warn("Target audio resource file could not be successfully resolved or played.");
+            }
+
+            // 2. Perform Single Page UI routing toggle visibility switches
+            const activeScreens = document.querySelectorAll('.screen');
+            activeScreens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            const target = document.getElementById(targetScreenId);
+            if (target) {
+                target.classList.add('active');
+            } else {
+                console.error(`Navigation Error: Targeted window identity block '${targetScreenId}' is missing layout declaration.`);
+            }
+        }
+    </script>
+</body>
 </html>
